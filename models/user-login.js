@@ -32,7 +32,8 @@ const UserLogin = sequelize.define("user-login", {
         type: Sequelize.TEXT,
         allowNull: false,
     },
-    sendTo: Sequelize.ENUM("mobile", "email", "both"),
+    emailVerification: Sequelize.BOOLEAN,
+    smsVerification: Sequelize.BOOLEAN,
     otp: Sequelize.STRING,
     otp_expiry: Sequelize.DATE
 });
