@@ -7,6 +7,8 @@ const app = express();
 const userLoginRoutes = require("./routes/user-login");
 const userDataRoutes = require("./routes/user-data");
 
+const PORT = process.env.PORT || 3000;
+
 app.use(express.json());
 
 app.use("/userAuth", userLoginRoutes);
@@ -26,7 +28,7 @@ app.use((err, req, res, next) => {
 sequelize
     .sync()
     .then((result) => {
-        app.listen(process.env.PORT || 3000);
+        app.listen(PORT || 3000);
     })
     .catch((err) => {
         console.log(err);
