@@ -13,23 +13,28 @@ app.use(express.json());
 
 app.use("/userAuth", userLoginRoutes);
 app.use("/userData", userDataRoutes);
-// handle not found not found middleware
+
+// Handle not found middleware
 app.use("*", function (req, res, next) {
     res.status(404).json({ message: "notfound" });
 });
 
+// Error handling middleware
 app.use((err, req, res, next) => {
     const statusCode = res.statusCode ? res.statusCode : 500;
     return res.status(statusCode).json({
-        message: err.message? err.message : "Internal Server Error",
+        message: err.message ? err.message : "Internal Server Error",
     });
 });
 
 sequelize
     .sync()
     .then((result) => {
-        app.listen(PORT || 3000);
+        console.log("Database synchronized:", result);
+        app.listen(PORT, '0.0.0.0', () => {
+            console.log(`Server running on port ${PORT}`);
+        });
     })
     .catch((err) => {
-        console.log(err);
+        console.error("Error synchronizing database:", err);
     });
