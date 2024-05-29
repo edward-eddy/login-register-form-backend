@@ -9,7 +9,9 @@ const validateRegister = (req, res, next) => {
         mobile: Joi.string().pattern(new RegExp("^[0-9]{11}$")).required(),
         password: Joi.string().min(6).required(),
         confirmPassword: Joi.any().valid(Joi.ref("password")).required(),
-        sendTo: Joi.string().valid("mobile", "email", "both"),
+        terms: Joi.boolean().truthy(),
+        emailVerification: Joi.boolean(),
+        smsVerification: Joi.boolean()
     });
 
     const { error } = schema.validate(req.body);

@@ -1,7 +1,6 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const nodemailer = require('nodemailer');
-
+const nodemailer = require("nodemailer");
 
 const userLoginModel = require("../models/user-login");
 
@@ -13,7 +12,15 @@ function generateToken(id) {
 }
 
 exports.register = (req, res) => {
-    const { firstName, lastName, email, mobile, password, sendTo } = req.body;
+    const {
+        firstName,
+        lastName,
+        email,
+        mobile,
+        password,
+        emailVerification,
+        smsVerification,
+    } = req.body;
     const newUser = userLoginModel
         .create({
             firstName,
@@ -21,19 +28,22 @@ exports.register = (req, res) => {
             email,
             mobile,
             password,
-            sendTo,
+            emailVerification,
+            smsVerification,
         })
-        .then(() => {
-            res.status(201).json(newUser);
+        .then((data) => {
+            console.log("reg success");
+            res.status(201).json(newUser, data);
         })
         .catch((error) => {
-            res.status(400).json({ error: error.message });
+            console.log("reg failed", error.errors[0]);
+            res.status(400).json({ error });
         });
 };
 
 exports.login = async (req, res) => {
     const { email, password } = req.body;
-
+    console.log("validateLogin==================>", email, password);
     // Check if the user with the given email exists in our DB
     const user = await userLoginModel.findOne({ email });
 

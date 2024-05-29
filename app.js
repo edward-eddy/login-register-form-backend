@@ -1,5 +1,6 @@
 const express = require("express");
 const sequelize = require("./util/database");
+const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
@@ -9,6 +10,7 @@ const userDataRoutes = require("./routes/user-data");
 
 const PORT = process.env.PORT || 3000;
 
+app.use(cors());
 app.use(express.json());
 
 app.use("/userAuth", userLoginRoutes);
@@ -30,7 +32,7 @@ app.use((err, req, res, next) => {
 sequelize
     .sync()
     .then((result) => {
-        console.log("Database synchronized:", result);
+        // console.log("Database synchronized:", result);
         app.listen(PORT, '0.0.0.0', () => {
             console.log(`Server running on port ${PORT}`);
         });
