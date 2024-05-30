@@ -43,7 +43,6 @@ exports.register = (req, res) => {
 
 exports.login = async (req, res) => {
     const { email, password } = req.body;
-    console.log("validateLogin==================>", email, password);
     // Check if the user with the given email exists in our DB
     const user = await userLoginModel.findOne({ email });
 

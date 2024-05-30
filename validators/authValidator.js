@@ -33,6 +33,7 @@ const validateLogin = (req, res, next) => {
 };
 
 const validateProfile = (req, res, next) => {
+    // console.log(req.body.profileData);
     const schema = Joi.object({
         firstName: Joi.string().required(),
         lastName: Joi.string().required(),
@@ -44,15 +45,16 @@ const validateProfile = (req, res, next) => {
         country: Joi.string().required(),
         city: Joi.string().required(),
         fullAddress: Joi.string().required(),
-        userId: Joi.number().required(),
         social: Joi.object(),
-        bref: Joi.string(),
+        bref: Joi.string().allow(null).allow(""),
         imageUrl: Joi.string(),
     });
 
-    const { error } = schema.validate(req.body);
-    if (error) return res.status(400).json({ error: error.details[0].message });
-
+    const { error } = schema.validate(req.body.profileData);
+    if (error){
+        console.log("Joi error: ", error);
+        return res.status(400).json({ error: error.details[0].message, error });
+}
     next();
 };
 
