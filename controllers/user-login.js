@@ -14,7 +14,7 @@ function generateToken(id) {
 exports.login = async (req, res) => {
     const { email, password } = req.body;
     // Check if the user with the given email exists in our DB
-    const user = await userLoginModel.findOne({ email });
+    const user = await userLoginModel.findOne({ where: {email} });
 
     if (!user) {
         return res.status(401).json({ message: "Invalid email or password" });
@@ -123,7 +123,7 @@ exports.verifyOtp = async (req, res) => {
     const { email, otp } = req.body;
 
     try {
-        const user = await userLoginModel.findOne({ email });
+        const user = await userLoginModel.findOne({ where: {email} });
 
         if (user.otp !== otp) {
             res.status(401).json({
