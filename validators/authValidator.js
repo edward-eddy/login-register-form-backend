@@ -52,7 +52,7 @@ const validateProfile = (req, res, next) => {
 
     const { error } = schema.validate(req.body.profileData);
     if (error){
-        console.log("Joi error: ", error);
+        // console.log("Joi error: ", error);
         return res.status(400).json({ error: error.details[0].message, error });
 }
     next();

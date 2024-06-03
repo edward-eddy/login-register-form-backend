@@ -11,6 +11,34 @@ function generateToken(id) {
     });
 }
 
+exports.login = async (req, res) => {
+    const { email, password } = req.body;
+    // Check if the user with the given email exists in our DB
+    const user = await userLoginModel.findOne({ email });
+
+    if (!user) {
+        return res.status(401).json({ message: "Invalid email or password" });
+    } else if (!user.verified) {
+        return res.status(403).json({
+            message:
+                "Please enter your OTP to verify your account.\nYou can find it in your mail inbox",
+        });
+    }
+    try {
+        const isValid = await bcrypt.compare(password, user.password);
+
+        if (!isValid) {
+            return res
+                .status(401)
+                .json({ message: "Invalid email or password" });
+        }
+        res.status(200).json({ token: generateToken(user.id), user });
+    } catch (error) {
+        // Handle any errors related to bcrypt.compare() here
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
 exports.register = (req, res) => {
     const {
         firstName,
@@ -30,52 +58,40 @@ exports.register = (req, res) => {
             password,
             emailVerification,
             smsVerification,
+            verified: false,
         })
-        .then((data) => {
-            console.log("reg success");
-            res.status(201).json(newUser, data);
+        .then(async (data) => {
+            await this.sendOtp(req, res);
         })
         .catch((error) => {
-            console.log("reg failed", error.errors[0]);
             res.status(400).json({ error });
         });
 };
 
-exports.login = async (req, res) => {
-    const { email, password } = req.body;
-    // Check if the user with the given email exists in our DB
-    const user = await userLoginModel.findOne({ email });
-
-    if (!user) {
-        return res.status(401).json({ message: "Invalid email or password" });
-    }
-    try {
-        const isValid = await bcrypt.compare(password, user.password);
-
-        if (!isValid) {
-            return res
-                .status(401)
-                .json({ message: "Invalid email or password" });
-        }
-        res.status(200).json({ token: generateToken(user.id), user });
-    } catch (error) {
-        // Handle any errors related to bcrypt.compare() here
-        console.error("Error comparing passwords:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-};
-
-const sendOtp = async (req, res) => {
+exports.sendOtp = async (req, res) => {
     try {
         const { email } = req.body;
         const otp = Math.floor(100000 + Math.random() * 900000);
+        const date = new Date();
 
+        const user = await userLoginModel.update(
+            {
+                otp,
+                otp_expiry: date.setMinutes(date.getMinutes() + 10),
+            },
+            { where: { email } }
+        );
         // Configure Nodemailer
         const transporter = nodemailer.createTransport({
-            service: "gmail",
+            host: "smtp.gmail.com",
+            // service: "gmail",
             auth: {
+                name: "qtech",
                 user: process.env.EMAIL,
                 pass: process.env.EMAIL_PASSWORD,
+            },
+            tls: {
+                rejectUnauthorized: false,
             },
         });
 
@@ -83,12 +99,53 @@ const sendOtp = async (req, res) => {
             from: process.env.EMAIL,
             to: email,
             subject: "Your OTP Code",
-            text: `Your OTP code is ${otp}`,
+            text: `Your OTP code is ${otp} \nThis OPT will expire after 10 minutes.`,
         };
 
-        await transporter.sendMail(mailOptions);
-        res.status(200).json({ message: "OTP sent successfully" });
+        transporter
+            .sendMail(mailOptions)
+            .then(() => {
+                res.status(200).json({
+                    message: `OTP sent successfully to ${email},\n Go check your mailbox`,
+                });
+            })
+            .catch((error) => {
+                res.status(500).json({
+                    message: "Error sending email", error
+                });
+            });
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        res.json({ message: error.message });
     }
 };
+
+exports.verifyOtp = async (req, res) => {
+    const { email, otp } = req.body;
+
+    try {
+        const user = await userLoginModel.findOne({ email });
+
+        if (user.otp !== otp) {
+            res.status(401).json({
+                message: "Wrong OTP,\nCheck your mail again",
+            });
+        } else if (user.otp === otp && user.otp_expiry < new Date()) {
+            res.status(410).json({ message: "Your OTP has been expired \nRequest another one." });
+        } else {
+
+            await user.update({ verified: true });
+            res.status(200).json({
+                message: "Your account has been verified.\n You can login now.",
+            });
+        }
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// module.exports = {
+//     login,
+//     register,
+//     sendOtp,
+//     verifyOtp,
+// };

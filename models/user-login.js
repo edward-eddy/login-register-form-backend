@@ -32,8 +32,9 @@ const UserLogin = sequelize.define("user-login", {
         type: Sequelize.TEXT,
         allowNull: false,
     },
-    emailVerification: Sequelize.BOOLEAN,
-    smsVerification: Sequelize.BOOLEAN,
+    verified: { type: Sequelize.BOOLEAN, defaultValue: false },
+    emailVerification: { type: Sequelize.BOOLEAN, defaultValue: false },
+    smsVerification: { type: Sequelize.BOOLEAN, defaultValue: false },
     otp: Sequelize.STRING,
     otp_expiry: Sequelize.DATE,
 });
