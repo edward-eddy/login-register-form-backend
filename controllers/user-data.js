@@ -5,11 +5,9 @@ const userLoginModel = require("../models/user-login");
 var userIdFromHeaders = (req) => {
     var userId;
     const { token } = req.headers;
-    console.log("req.headers ", jwt.decode(token).id);
     if (token) {
         try {
             userId = jwt.decode(token).id;
-            console.log("try:",userId);
         } catch (err) {
             console.log(err);
         }
@@ -26,7 +24,6 @@ exports.getUserById = (req, res) => {
                 res.status(202).json({data, userData});
             })
             .catch((error) => {
-                console.log(error.message);
                 error.message === 'WHERE parameter "userId" has invalid "undefined" value'
                 ? res.status(404).json({ message: "املأ بياناتك الشخصية" })
                 : res.status(401).json({ message: error.message })
@@ -74,7 +71,7 @@ createUserDetails = (req, res) => {
             res.status(201).json(createdUser);
         })
         .catch((error) => {
-            console.log("cud error",error.message);
+            // console.log("cud error",error.message);
             res.status(401).json({ error: error.message });
         });
 };
@@ -96,10 +93,9 @@ exports.updateUserDetails = async (req, res) => {
         bref,
         imageUrl,
     } = req.body.profileData;
-    console.log( userId);
     try {
         const userDetails = await userDataModel.findOne({ where: { userId } })
-        // if (userDetails) {
+        if (userDetails) {
             const updatedUser = userDataModel
                 .update(
                     {
@@ -121,17 +117,17 @@ exports.updateUserDetails = async (req, res) => {
                         where: { userId },
                     }
                 )
-                .then(() => {
+                .then((response) => {
                     res.status(201).json({ message: "", updatedUser });
                 })
                 .catch((error) => {
                     res.status(400).json({ error: error.message });
                 });
-        // } else {
-        //     const createdUser = await createUserDetails(req, res);
-        // }
+        } else {
+            const createdUser = await createUserDetails(req, res);
+        }
     } catch (error) {
-        console.log("uud error",error.message);
+        // console.log("uud error",error.message);
         error.message === 'WHERE parameter "userId" has invalid "undefined" value'
         ? await createUserDetails(req, res)
         : res.status(500).json({ error: error.message });
